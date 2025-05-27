@@ -1,0 +1,131 @@
+I need you to generate a **complete, single HTML file** containing all necessary HTML, CSS, and JavaScript (vanilla, no external libraries or frameworks) to create a multi-step web application with a configuration page. The application should be responsive and primarily designed for use on a mobile phone (e.g., Chrome browser).
+
+**Application Overview:**
+The app is primarily a **12-step form**. The user should be able to navigate forward and backward through these steps using buttons in the header. A "Restart" button should be at the bottom of the form, which, when clicked, clears all user selections for the 12 steps and returns the user to the first step. The application also includes a **Configuration Page** to customize user experience, with settings stored in the browser.
+
+**Configuration Page:**
+This page allows users to customize their experience.
+*   **Access:** Accessible via a configuration button (displaying the `U+1F6E0` (🛠️) icon) in the header of the 12-step form. This page will also need a clear way to return to the main application (e.g., a "Back to App" or "Save and Close" button).
+*   **Functionality:**
+    *   **Custom Display Names for Paintings:**
+        *   For each of the 8 standard paintings (Horse, House, Snow, Tree, Boat, River, Owl, Lamb chop), the user can optionally enter a custom display name.
+        *   Input fields should be provided for each, showing the default name as a placeholder or label.
+        *   If a custom name is provided, it should be used throughout the application where painting names are displayed. Otherwise, the default name is used. The internal JavaScript logic should still use the original, non-customized painting names as unique identifiers.
+    *   **Roman Numeral Input Method:**
+        *   The user can choose between two methods for entering Roman numerals in Step 7:
+            1.  **Dropdown List (Default):** The standard `<select>` element.
+            2.  **Direct Buttons:** A row of clearly labeled buttons for each Roman numeral, displayed with their integer value in parentheses: I (1), II (2), III (3), IV (4), V (5), VI (6), VII (7), VIII (8), IX (9), X (10).
+        *   The selected preference should be stored and used to render the appropriate input method in Step 7.
+*   **Storage:**
+    *   All configuration settings (custom display names, Roman numeral input preference) must be stored in the user's browser (e.g., using `localStorage`).
+    *   These settings should persist across sessions.
+*   **Buttons:**
+    *   **"Save Configuration":** Saves the current settings on the configuration page to browser storage.
+    *   **"Set to Defaults":** Resets all configuration settings (custom names, input method) back to their original application defaults, updates the browser storage, and refreshes the configuration page display to show these defaults. This button does *not* affect the current selections in the 12-step form.
+*   **Non-interference:** The main form's "Restart" button (at the bottom of the 12-step form) should *not* reset these browser-stored configurations. It only resets the selections within the 12 steps.
+
+**Header Styling (for the 12-step form):**
+The header containing the step navigation and configuration access should be space-efficient on mobile.
+*   **Navigation:** Controls for moving between steps.
+    *   **'Back' Button:** Should be enabled if the current step is not the first step (Step 1: Workflow). On Step 1, it should be disabled or hidden.
+    *   **'Next' Button:**
+        *   **Step 1 (Workflow) and Step 2 (Lockdown):** The 'Next' button in the header must be enabled by default. This allows users to proceed using this header button without needing to press the specific buttons described within the content of these steps (e.g., "Yeah yeah, I know, NEXT!!"). However, those content-specific buttons must still be functional and also navigate to the next step when pressed.
+        *   **Steps 3-6 (Painting Selection), Step 7 (Roman numerals), Steps 8-11 (Modifier Selection):** These steps require user input or selections. The 'Next' button in the header should generally be enabled only after the user has made the necessary selection(s) for the current step. If auto-advance is triggered by a selection, the application will move to the next step automatically. If the user navigates back to one of these steps after having made a selection, the 'Next' button should be enabled, allowing them to proceed again without re-selecting (unless they change their selection).
+        *   **Step 12 (Result):** The 'Next' button should be disabled, as this is the final step in the workflow.
+*   **Configuration Button:** A button displaying the `U+1F6E0` (🛠️) icon. This button should be placed to the left of the 'Next' (or step forward) button. It navigates to the Configuration Page.
+*   **Layout Example:** `Back Button` | `Step Title` | `Config Button (🛠️)` | `Next Button`
+*   The configuration button should always be visible in the header of the 12-step form, allowing access to settings at any point during the 12 steps.
+
+**State Management:**
+*   **Form State:** User selections for the 12-step form (selected pictures, Roman numerals, modifiers) must be preserved as they navigate between steps. The UI should update if dependent data changes (e.g., Roman numerals step updating based on picture selections, display names updating based on configuration). This form state is cleared by the "Restart" button.
+*   **Configuration State:** User preferences set on the Configuration Page are stored separately (e.g., in `localStorage`) and are only modified via the Configuration Page itself. This state is *not* cleared by the "Restart" button.
+
+**Image Handling:**
+Images will be provided via relative local links. For each of the 8 selectable pictures, there will be a "screen" version and a "painting" version. The filenames will follow the pattern: `[picture_name_lowercase_underscored]_screen.PNG` and `[picture_name_lowercase_underscored]_painting.PNG`. For example, for "Horse", the files would be `horse_screen.PNG` and `horse_painting.PNG`. The screen versions of the images are square and should be displayed with a height and width of 110px.
+
+**Detailed Step Breakdown (for the 12-step form):**
+
+**Step 1: Workflow** (This is the initial step)
+*   Title: "Workflow"
+*   Show an explanation of the workflow:
+    *   Step 1: Workflow explanation (this step)
+    *   Step 2: Lock down the building and unlock the computer using the keypad
+    *   Step 3 - 6: Open the computer and select paintings that are shown on the computer (display names for paintings should reflect configuration)
+    *   Step 7: Run around and note the roman numerals underneath the 4 paintings (display names for paintings should reflect configuration)
+    *   Step 8 - 11: Open the computer again and select the modifier belonging to each painting (display names for paintings should reflect configuration)
+    *   Step 12: Input the resulting code shown at the end of this form
+*   A single button labeled "Yeah yeah, I know, NEXT!!" that navigates to "Lockdown". (Note: The header 'Next' button will also allow proceeding from this step, as per header navigation rules. The 'Back' button in the header will be disabled/hidden. The 'Config' button will be visible.)
+
+**Step 2: Lockdown**
+*   Title: "Lockdown"
+*   Display the text: "Lockdown Code: **2179**" (the code should be prominent).
+*   A single button labeled "Sure, NEXT PLEASE!" that navigates to "Painting 1". (Note: The header 'Next' button will also allow proceeding from this step, as per header navigation rules.)
+
+**Steps 3-6: Painting Selection (Painting 1, Painting 2, Painting 3, Painting 4)**
+*   These four steps will have a similar structure and are named "Painting 1", "Painting 2", "Painting 3", and "Painting 4" respectively.
+*   Display a clear title, e.g., "Painting 1".
+*   Display the instruction to select a painting.
+*   Present 8 distinct pictures for selection. The user should select ONLY ONE picture per step.
+    *   **Picture Data (use these exact original names as internal identifiers and for image file names):**
+        1.  Name: "Horse"
+        2.  Name: "House"
+        3.  Name: "Snow"
+        4.  Name: "Tree"
+        5.  Name: "Boat"
+        6.  Name: "River"
+        7.  Name: "Owl"
+        8.  Name: "Lamb chop"
+    *   The `_screen.PNG` version should be displayed for selection.
+    *   The picture's **display name** (custom if set, otherwise default) should be shown below the image.
+    *   Visually indicate the selected picture (e.g., border, background change).
+*   Store the selected picture's **original name** (e.g., "Horse") for each step's item.
+*   **Auto-advance:** When a picture has been selected in one of these steps, automatically navigate to the next sequential step (e.g., from "Painting 1" to "Painting 2", or from "Painting 4" to "Roman numerals").
+
+**Step 7: Roman numerals**
+*   Title: "Roman numerals"
+*   This step should list all *unique* pictures that were selected across "Painting 1-4" steps. If no pictures have been selected yet, display a message like "No pictures selected yet. Please select pictures in Painting 1-4 steps."
+*   For each *unique* picture identified:
+    *   Display **both** the `_screen.PNG` and `_painting.PNG` versions of the picture (e.g., 110x110px).
+    *   Selecting the `_painting.PNG` displays the image full screen with an "x" on the top right corner to close.
+    *   Display the picture's **display name** (custom if set, otherwise default, e.g., "My Custom Horse:") followed by a colon.
+    *   Provide an input method for the user to select a Roman numeral, based on the **Configuration Page setting**:
+        *   **Dropdown (Default):** A `<select>` list. Options: I (1), II (2), III (3), IV (4), V (5), VI (6), VII (7), VIII (8), IX (9), X (10). Include a default unselected option like "Select Roman Numeral".
+        *   **Direct Buttons:** A horizontal row of distinct buttons, one for each Roman numeral, displayed with their integer value in parentheses: I (1), II (2), III (3), IV (4), V (5), VI (6), VII (7), VIII (8), IX (9), X (10). Visually indicate the selected button.
+    *   The screen picture and painting picture should display on a single line.
+    *   The picture's display name and numeral selector should be on **a single line** per unique picture.
+    *   Store the chosen Roman numeral's corresponding *integer value* (1-10) associated with this unique picture's **original name**.
+*   **Auto-advance:** When the Roman numeral for the last unique selected picture is chosen (i.e., all displayed unique pictures have a Roman numeral assigned), automatically navigate to the "Modifier 1" step.
+
+**Steps 8-11: Modifier Selection (Modifier painting 1, Modifier painting 2, Modifier painting 3, Modifier painting 4)**
+*   These four steps will have a similar structure and are named "Modifier painting 1", "Modifier painting 2", "Modifier painting 3", and "Modifier painting 4" respectively.
+*   Display a clear title, e.g., "Modifier painting 1".
+*   Display the instruction to select a modifier.
+*   Present the painting selected at the corresponding picture selection step (Steps 3-6).
+    *   The `_screen.PNG` version of the selected painting should be displayed.
+    *   The picture's **display name** (custom if set, otherwise default) should be shown below the image.
+*   Present 7 modifier options: -3, -2, -1, 0 (displayed as X), 1, 2, 3. These options should be clearly and fully visible (e.g., as distinct buttons). -3, -2, -1 should be on one line. X alone on another line and colored red. +1, +2, +3 on another line. Allow the user to select ONLY ONE modifier per step.
+*   Visually indicate the selected modifier (e.g., border, background change).
+*   Store the modifier value for each step's item.
+*   **Auto-advance:** When a modifier has been selected in one of these steps, automatically navigate to the next sequential step (e.g., from "Modifier painting 1" to "Modifier painting 2", or from "Modifier painting 4" to "Result").
+
+**Step 12: Result**
+*   Title: "Result"
+*   If any item is incomplete (missing picture or modifier) or a required unique picture lacks a Roman numeral, display a message prompting the user to complete the necessary previous steps (e.g., "Please complete all previous steps..."), and do not generate the code.
+*   For each of the four items (from "Painting 1", "Painting 2", etc.):
+    1.  Identify the **original name** of the picture selected for this item.
+    2.  Identify the modifier selected for this item.
+    3.  Retrieve the integer value of the Roman numeral assigned in the "Roman numerals" step to the *identified picture's original name*.
+    4.  Calculate the result: (Integer value of Roman numeral) + (Modifier).
+*   Concatenate the *direct numerical results* of these four calculations in order to form a single code string (e.g., "8942", "89112", "894-1").
+*   Display the final concatenated code prominently.
+*   Optionally, below the final code, provide a summary breakdown of each item's calculation for clarity (e.g., "Digit 1 (My Custom Horse, Mod -2, Roman X): 10 - 2 = 8"), showing the picture's **display name**, modifier, Roman numeral (e.g., "X" not "X (10)"), and calculation.
+
+**Styling & Code Requirements:**
+*   All HTML, CSS (in `<style>` tags), and JavaScript (in `<script>` tags) must be in a single `.html` file. This includes the HTML/CSS/JS for the Configuration Page.
+*   Use vanilla JavaScript. No external libraries or frameworks.
+*   CSS should be clean, modern, and mobile-responsive. Ensure selections are visually clear. Reduce padding/margins where necessary to ensure content fits on typical mobile screens without excessive scrolling (e.g., for the Roman numerals step).
+*   **Button Styling:** General application buttons (e.g., Header Next/Back, Restart, Config page buttons, Step 1/2 content buttons) should be visually engaging and colorful. Modifier selection buttons (Step 8-11) and Roman numeral selection buttons (Step 7, if "Direct Buttons" option is chosen) should have a more functional, possibly neutral, appearance and are not required to be colorful.
+*   The Configuration Page should also be styled consistently and be mobile-responsive.
+*   Comment the JavaScript code to explain logic, especially for state management (form vs. configuration), loading/saving configuration, and dynamic UI updates based on configuration.
+*   Prioritize clarity, functionality, and adherence to the described logic. Ensure smooth navigation and state handling for both the 12-step form and the configuration settings.
+*   Implement functions to get/set configuration from `localStorage`, and a function to retrieve the appropriate display name for a painting (checking for custom names first).

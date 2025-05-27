@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Multi-Step Puzzle Helper</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-size: 16px;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 600px; /* Max width for larger screens, but primarily mobile */
+            margin: 0 auto;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        #app-header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        #app-header button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        #app-header button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        #step-title {
+            font-size: 1.1em;
+            margin: 0;
+            text-align: center;
+            flex-grow: 1;
+            padding: 0 10px;
+        }
+
+        #step-content {
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        #step-content h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+
+        #app-footer {
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+
+        #restart-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        #restart-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .action-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            width: 100%;
+            margin-top: 20px;
+            display: block;
+        }
+        .action-button:hover {
+            background-color: #218838;
+        }
+
+        /* Picture selection styling */
+        .picture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+            justify-items: center;
+        }
+        .picture-item {
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+        .picture-item img {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .picture-item.selected {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+        }
+        .picture-item span {
+            font-size: 0.9em;
+        }
+
+        /* Roman numeral step styling */
+        .roman-numeral-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .roman-numeral-images {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .roman-numeral-images img {
+            width: 80px; /* Slightly smaller to fit */
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .roman-numeral-images .painting-image-preview {
+            cursor: pointer;
+        }
+        .roman-numeral-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap; /* Allow wrapping if needed */
+        }
+        .roman-numeral-details label {
+            font-weight: bold;
+            margin-right: 5px;
+            flex-shrink: 0;
+        }
+        .roman-numeral-details select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            flex-grow: 1;
+            min-width: 150px; /* Ensure select is usable */
+        }
+
+        /* Modifier selection styling */
+        .modifier-display-painting img {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto 5px auto;
+        }
+        .modifier-display-painting p {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .modifier-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modifier-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .modifier-btn {
+            padding: 10px 15px;
+            font-size: 1.1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            min-width: 50px;
+            text-align: center;
+        }
+        .modifier-btn.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+        .modifier-btn.modifier-zero {
+            background-color: #e0e0e0; /* Default for X */
+        }
+        .modifier-btn.modifier-zero.selected {
+            background-color: #dc3545; /* Red when selected */
+            color: white;
+        }
+        .modifier-btn.modifier-zero { /* Specific style for X button always */
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+
+        /* Result step styling */
+        .result-code {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #28a745;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9f5e9;
+            border-radius: 5px;
+        }
+        .result-breakdown ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .result-breakdown li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            padding-top: 50px; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgb(0,0,0); 
+            background-color: rgba(0,0,0,0.9);
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 90%;
+            max-width: 700px;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .modal-close-btn:hover,
+        .modal-close-btn:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .prominent-code {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #dc3545; /* Red for prominence */
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 400px) {
+            .picture-grid {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* Smaller images for very small screens */
+            }
+            .picture-item img {
+                width: 90px;
+                height: 90px;
+            }
+             .roman-numeral-images img {
+                width: 70px; 
+                height: 70px;
+            }
+            #app-header {
+                padding: 8px 10px;
+            }
+            #app-header button {
+                padding: 6px 10px;
+            }
+            #step-title {
+                font-size: 1em;
+            }
+            .modifier-btn {
+                padding: 8px 10px;
+                font-size: 1em;
+                min-width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <header id="app-header">
+            <button id="prev-step-btn">< Back</button>
+            <h2 id="step-title">Step Title</h2>
+            <button id="next-step-btn">Next ></button>
+        </header>
+        <main id="step-content">
+            <!-- Content for the current step will be injected here -->
+        </main>
+        <footer id="app-footer">
+            <button id="restart-btn">Restart</button>
+        </footer>
+    </div>
+
+    <div id="image-modal" class="modal">
+        <span class="modal-close-btn" id="modal-close-btn">×</span>
+        <img class="modal-content" id="modal-img-src">
+    </div>
+
+    <script>
+        const MAX_STEPS = 12;
+        let currentStep = 1;
+
+        // Data for selections
+        let appData = {
+            painting1_picture: null,
+            painting2_picture: null,
+            painting3_picture: null,
+            painting4_picture: null,
+            romanNumerals: {}, // { pictureName: integerValue }
+            modifier1_value: null,
+            modifier2_value: null,
+            modifier3_value: null,
+            modifier4_value: null,
+        };
+
+        const PICTURE_DATA = [
+            { name: "Horse" }, { name: "House" }, { name: "Snow" }, { name: "Tree" },
+            { name: "Boat" }, { name: "River" }, { name: "Owl" }, { name: "Lamb chop" }
+        ];
+
+        const ROMAN_NUMERAL_OPTIONS = [
+            { text: "Select Roman Numeral", value: null },
+            { text: "I (1)", value: 1 }, { text: "II (2)", value: 2 }, { text: "III (3)", value: 3 },
+            { text: "IV (4)", value: 4 }, { text: "V (5)", value: 5 }, { text: "VI (6)", value: 6 },
+            { text: "VII (7)", value: 7 }, { text: "VIII (8)", value: 8 }, { text: "IX (9)", value: 9 },
+            { text: "X (10)", value: 10 }
+        ];
+
+        const MODIFIERS = [-3, -2, -1, 0, 1, 2, 3];
+
+        // DOM Elements
+        let stepTitleElement, stepContentElement, prevStepBtn, nextStepBtn, restartBtn, imageModal, modalImg, modalCloseBtn;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            stepTitleElement = document.getElementById('step-title');
+            stepContentElement = document.getElementById('step-content');
+            prevStepBtn = document.getElementById('prev-step-btn');
+            nextStepBtn = document.getElementById('next-step-btn');
+            restartBtn = document.getElementById('restart-btn');
+            imageModal = document.getElementById('image-modal');
+            modalImg = document.getElementById('modal-img-src');
+            modalCloseBtn = document.getElementById('modal-close-btn');
+
+            prevStepBtn.addEventListener('click', goPrevStep);
+            nextStepBtn.addEventListener('click', goNextStep);
+            restartBtn.addEventListener('click', restartApp);
+            modalCloseBtn.addEventListener('click', closeModal);
+            imageModal.addEventListener('click', (e) => { // Close if clicked outside image
+                if (e.target === imageModal) {
+                    closeModal();
+                }
+            });
+            
+            renderCurrentStep();
+        });
+
+        function getPictureImageSrc(pictureName, type) {
+            if (!pictureName) return ""; // Or a placeholder
+            return `images/${pictureName.toLowerCase().replace(/ /g, '_')}_${type}.PNG`;
+        }
+        
+        function getRomanNumeralTextByValue(value) {
+            const option = ROMAN_NUMERAL_OPTIONS.find(opt => opt.value === value);
+            return option ? option.text.split(' ')[0] : 'N/A'; // e.g., "X" from "X (10)"
+        }
+
+        function resetAppData() {
+            appData = {
+                painting1_picture: null, painting2_picture: null, painting3_picture: null, painting4_picture: null,
+                romanNumerals: {},
+                modifier1_value: null, modifier2_value: null, modifier3_value: null, modifier4_value: null,
+            };
+        }
+
+        function restartApp() {
+            if (confirm("Are you sure you want to restart? All selections will be cleared.")) {
+                resetAppData();
+                currentStep = 1;
+                renderCurrentStep();
+            }
+        }
+
+        function goNextStep() {
+            if (currentStep < MAX_STEPS) {
+                currentStep++;
+                renderCurrentStep();
+            }
+        }
+
+        function goPrevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                renderCurrentStep();
+            }
+        }
+        
+        function goToStep(stepNumber) {
+            if (stepNumber >= 1 && stepNumber <= MAX_STEPS) {
+                currentStep = stepNumber;
+                renderCurrentStep();
+            }
+        }
+
+        function updateNavigationButtonsState() {
+            prevStepBtn.disabled = (currentStep === 1);
+            
+            // Default to enabled, then disable based on specific step conditions
+            nextStepBtn.disabled = false;
+
+            if (currentStep === MAX_STEPS) {
+                nextStepBtn.disabled = true;
+            } else if (currentStep === 1 || currentStep === 2) { // Steps with on-page buttons for next
+                nextStepBtn.disabled = true;
+            } else if (currentStep >= 3 && currentStep <= 6) { // Painting selection steps
+                const paintingKey = `painting${currentStep - 2}_picture`;
+                nextStepBtn.disabled = !appData[paintingKey];
+            } else if (currentStep === 7) { // Roman numerals step
+                nextStepBtn.disabled = !areAllRomanNumeralsAssigned();
+            } else if (currentStep >= 8 && currentStep <= 11) { // Modifier steps
+                const modifierKey = `modifier${currentStep - 7}_value`;
+                nextStepBtn.disabled = (appData[modifierKey] === null);
+            }
+        }
+        
+        function getUniqueSelectedPictures() {
+            const selected = [
+                appData.painting1_picture,
+                appData.painting2_picture,
+                appData.painting3_picture,
+                appData.painting4_picture
+            ].filter(p => p !== null); // Filter out nulls
+            return [...new Set(selected)]; // Get unique names
+        }
+
+        function areAllRomanNumeralsAssigned() {
+            const uniquePictures = getUniqueSelectedPictures();
+            if (uniquePictures.length === 0) { // No pictures selected yet means not all assigned
+                // Check if any painting is selected. If so, and unique is 0 (shouldn't happen), then false.
+                // If no paintings selected at all, this step is not "complete" for auto-advance.
+                const anyPaintingSelected = appData.painting1_picture || appData.painting2_picture || appData.painting3_picture || appData.painting4_picture;
+                return !anyPaintingSelected; // True if no paintings selected, false otherwise
+            }
+            return uniquePictures.every(picName => appData.romanNumerals[picName] !== undefined && appData.romanNumerals[picName] !== null);
+        }
+
+        function renderCurrentStep() {
+            stepContentElement.innerHTML = ''; // Clear previous content
+            let title = "";
+
+            switch (currentStep) {
+                case 1: title = "Workflow"; renderStep1(); break;
+                case 2: title = "Lockdown"; renderStep2(); break;
+                case 3: title = "Painting 1: Select painting"; renderPaintingSelectionStep(1); break;
+                case 4: title = "Painting 2: Select painting"; renderPaintingSelectionStep(2); break;
+                case 5: title = "Painting 3: Select painting"; renderPaintingSelectionStep(3); break;
+                case 6: title = "Painting 4: Select painting"; renderPaintingSelectionStep(4); break;
+                case 7: title = "Roman numerals"; renderRomanNumeralsStep(); break;
+                case 8: title = "Modifier painting 1: Select modifier"; renderModifierSelectionStep(1); break;
+                case 9: title = "Modifier painting 2: Select modifier"; renderModifierSelectionStep(2); break;
+                case 10: title = "Modifier painting 3: Select modifier"; renderModifierSelectionStep(3); break;
+                case 11: title = "Modifier painting 4: Select modifier"; renderModifierSelectionStep(4); break;
+                case 12: title = "Result"; renderResultStep(); break;
+            }
+            stepTitleElement.textContent = title;
+            updateNavigationButtonsState();
+            window.scrollTo(0, 0); // Scroll to top on step change
+        }
+
+        // --- Step 1: Workflow ---
+        function renderStep1() {
+            stepContentElement.innerHTML = `
+                <h3>Workflow Explanation</h3>
+                <ul>
+                    <li>Step 1: Workflow explanation (this step)</li>
+                    <li>Step 2: Unlock the computer using keypad</li>
+                    <li>Step 3 - 6: Open the computer and select paintings that are shown on the computer</li>
+                    <li>Step 7: Run around and note the roman numerals underneath the 4 paintings</li>
+                    <li>Step 8 - 11: Open the computer again and select the modifier belonging to each painting</li>
+                    <li>Step 12: Input the resulting code shown at the end of this form</li>
+                </ul>
+                <button class="action-button" id="step1-next">Yeah yeah, I know, NEXT!!</button>
+            `;
+            document.getElementById('step1-next').addEventListener('click', () => goNextStep());
+        }
+
+        // --- Step 2: Lockdown ---
+        function renderStep2() {
+            stepContentElement.innerHTML = `
+                <p>Lockdown Code: <strong class="prominent-code">2179</strong></p>
+                <button class="action-button" id="step2-next">Sure, NEXT PLEASE!</button>
+            `;
+            document.getElementById('step2-next').addEventListener('click', () => goNextStep());
+        }
+
+        // --- Steps 3-6: Painting Selection ---
+        function renderPaintingSelectionStep(paintingNum) {
+            const appDataKey = `painting${paintingNum}_picture`;
+            let gridHtml = '<div class="picture-grid">';
+            PICTURE_DATA.forEach(pic => {
+                const isSelected = appData[appDataKey] === pic.name;
+                gridHtml += `
+                    <div class="picture-item ${isSelected ? 'selected' : ''}" data-picture-name="${pic.name}">
+                        <img src="${getPictureImageSrc(pic.name, 'screen')}" alt="${pic.name} screen version">
+                        <span>${pic.name}</span>
+                    </div>
+                `;
+            });
+            gridHtml += '</div>';
+            stepContentElement.innerHTML = gridHtml;
+
+            document.querySelectorAll('.picture-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    appData[appDataKey] = item.dataset.pictureName;
+                    // Re-render to update selection visuals and then auto-advance
+                    renderCurrentStep(); // This updates selection class
+                    if (currentStep < 7) { // Auto-advance from painting steps to next or Roman Numerals
+                       setTimeout(goNextStep, 100); // Short delay for visual feedback
+                    }
+                });
+            });
+        }
+
+        // --- Step 7: Roman numerals ---
+        function renderRomanNumeralsStep() {
+            const uniquePictures = getUniqueSelectedPictures();
+            if (uniquePictures.length === 0) {
+                stepContentElement.innerHTML = "<p>No pictures selected yet. Please select pictures in Painting 1-4 steps.</p>";
+                return;
+            }
+
+            let html = '';
+            uniquePictures.forEach(picName => {
+                const screenSrc = getPictureImageSrc(picName, 'screen');
+                const paintingSrc = getPictureImageSrc(picName, 'painting');
+                const currentRomanValue = appData.romanNumerals[picName] || null;
+
+                html += `
+                    <div class="roman-numeral-item">
+                        <div class="roman-numeral-images">
+                            <img src="${screenSrc}" alt="${picName} screen">
+                            <img src="${paintingSrc}" alt="${picName} painting" class="painting-image-preview" data-painting-src="${paintingSrc}">
+                        </div>
+                        <div class="roman-numeral-details">
+                            <label for="roman-${picName.replace(/ /g, '_')}">${picName}:</label>
+                            <select id="roman-${picName.replace(/ /g, '_')}" data-picture-name="${picName}">
+                                ${ROMAN_NUMERAL_OPTIONS.map(opt => 
+                                    `<option value="${opt.value}" ${opt.value === currentRomanValue ? 'selected' : ''}>${opt.text}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                    </div>
+                `;
+            });
+            stepContentElement.innerHTML = html;
+
+            document.querySelectorAll('.roman-numeral-details select').forEach(select => {
+                select.addEventListener('change', (event) => {
+                    const selectedPicName = event.target.dataset.pictureName;
+                    const value = event.target.value === "null" ? null : parseInt(event.target.value);
+                    appData.romanNumerals[selectedPicName] = value;
+                    updateNavigationButtonsState(); // Update nav immediately
+                    
+                    if (areAllRomanNumeralsAssigned()) {
+                        setTimeout(goNextStep, 100); // Auto-advance if all assigned
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.painting-image-preview').forEach(img => {
+                img.addEventListener('click', (event) => {
+                    openModal(event.target.dataset.paintingSrc);
+                });
+            });
+        }
+        
+        function openModal(imageSrc) {
+            modalImg.src = imageSrc;
+            imageModal.style.display = "block";
+        }
+
+        function closeModal() {
+            imageModal.style.display = "none";
+            modalImg.src = ""; // Clear src
+        }
+
+        // --- Steps 8-11: Modifier Selection ---
+        function renderModifierSelectionStep(modifierNum) {
+            const paintingKey = `painting${modifierNum}_picture`;
+            const modifierKey = `modifier${modifierNum}_value`;
+            const selectedPictureName = appData[paintingKey];
+
+            if (!selectedPictureName) {
+                stepContentElement.innerHTML = `<p>No painting selected for Painting ${modifierNum}. Please go back and select one.</p>`;
+                return;
+            }
+
+            const screenSrc = getPictureImageSrc(selectedPictureName, 'screen');
+            const currentModifier = appData[modifierKey];
+
+            let modifierButtonsHtml = '<div class="modifier-groups">';
+            // Group 1: -3, -2, -1
+            modifierButtonsHtml += '<div class="modifier-group">';
+            [-3, -2, -1].forEach(mod => {
+                modifierButtonsHtml += `<button class="modifier-btn ${currentModifier === mod ? 'selected' : ''}" data-value="${mod}">${mod}</button>`;
+            });
+            modifierButtonsHtml += '</div>';
+            
+            // Group 2: X (0)
+            modifierButtonsHtml += '<div class="modifier-group">';
+            const zeroSelected = currentModifier === 0;
+            modifierButtonsHtml += `<button class="modifier-btn modifier-zero ${zeroSelected ? 'selected' : ''}" data-value="0">X</button>`;
+            modifierButtonsHtml += '</div>';
+
+            // Group 3: +1, +2, +3
+            modifierButtonsHtml += '<div class="modifier-group">';
+            [1, 2, 3].forEach(mod => {
+                modifierButtonsHtml += `<button class="modifier-btn ${currentModifier === mod ? 'selected' : ''}" data-value="${mod}">+${mod}</button>`;
+            });
+            modifierButtonsHtml += '</div>';
+            modifierButtonsHtml += '</div>';
+
+
+            stepContentElement.innerHTML = `
+                <div class="modifier-display-painting">
+                    <img src="${screenSrc}" alt="${selectedPictureName} screen">
+                    <p>${selectedPictureName}</p>
+                </div>
+                ${modifierButtonsHtml}
+            `;
+
+            document.querySelectorAll('.modifier-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    appData[modifierKey] = parseInt(btn.dataset.value);
+                    renderCurrentStep(); // Re-render to update selection visuals
+                    if (currentStep < 12) { // Auto-advance from modifier steps
+                        setTimeout(goNextStep, 100);
+                    }
+                });
+            });
+        }
+
+        // --- Step 12: Result ---
+        function renderResultStep() {
+            let missingInfo = [];
+            if (!appData.painting1_picture) missingInfo.push("Painting 1 selection");
+            if (!appData.painting2_picture) missingInfo.push("Painting 2 selection");
+            if (!appData.painting3_picture) missingInfo.push("Painting 3 selection");
+            if (!appData.painting4_picture) missingInfo.push("Painting 4 selection");
+
+            const uniquePictures = getUniqueSelectedPictures();
+            uniquePictures.forEach(pic => {
+                if (appData.romanNumerals[pic] === undefined || appData.romanNumerals[pic] === null) {
+                    missingInfo.push(`Roman numeral for ${pic}`);
+                }
+            });
+            
+            if (appData.modifier1_value === null) missingInfo.push("Modifier for Painting 1");
+            if (appData.modifier2_value === null) missingInfo.push("Modifier for Painting 2");
+            if (appData.modifier3_value === null) missingInfo.push("Modifier for Painting 3");
+            if (appData.modifier4_value === null) missingInfo.push("Modifier for Painting 4");
+
+            // Check if any unique picture is actually selected before checking their roman numerals
+            const paintingsSelectedCount = [appData.painting1_picture, appData.painting2_picture, appData.painting3_picture, appData.painting4_picture].filter(Boolean).length;
+            if (paintingsSelectedCount > 0 && uniquePictures.length === 0) {
+                 // This case should ideally not happen if logic is correct, but as a fallback
+                missingInfo.push("Processing selected paintings for Roman numerals (internal error or incomplete prior step)");
+            }
+
+
+            if (missingInfo.length > 0) {
+                stepContentElement.innerHTML = `
+                    <h3>Incomplete Information</h3>
+                    <p>Please complete all previous steps. Missing:</p>
+                    <ul>${missingInfo.map(item => `<li>${item}</li>`).join('')}</ul>
+                `;
+                return;
+            }
+
+            let finalCode = "";
+            let breakdownHtml = "<h3>Calculation Breakdown:</h3><ul>";
+
+            for (let i = 1; i <= 4; i++) {
+                const pictureName = appData[`painting${i}_picture`];
+                const modifierValue = appData[`modifier${i}_value`];
+                const romanNumeralValue = appData.romanNumerals[pictureName];
+
+                if (pictureName === null || modifierValue === null || romanNumeralValue === null || romanNumeralValue === undefined) {
+                    // This check is a safeguard; primary check is `missingInfo` above.
+                    stepContentElement.innerHTML = `<p>Error: Data inconsistency for item ${i}. Please review previous steps.</p>`;
+                    return;
+                }
+                
+                const resultDigit = romanNumeralValue + modifierValue;
+                finalCode += resultDigit.toString();
+
+                const romanNumeralText = getRomanNumeralTextByValue(romanNumeralValue);
+                const modifierText = modifierValue === 0 ? "X" : (modifierValue > 0 ? `+${modifierValue}` : modifierValue.toString());
+
+                breakdownHtml += `
+                    <li>
+                        Digit ${i} (<strong>${pictureName}</strong>, Mod ${modifierText}, Roman ${romanNumeralText}):
+                        ${romanNumeralText} (${romanNumeralValue}) ${modifierValue < 0 ? '-' : '+'} ${Math.abs(modifierValue)} = <strong>${resultDigit}</strong>
+                    </li>`;
+            }
+            breakdownHtml += "</ul>";
+
+            stepContentElement.innerHTML = `
+                <h3>Final Code</h3>
+                <div class="result-code">${finalCode}</div>
+                <div class="result-breakdown">${breakdownHtml}</div>
+            `;
+        }
+
+    </script>
+</body>
+</html>
