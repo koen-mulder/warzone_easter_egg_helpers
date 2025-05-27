@@ -936,14 +936,15 @@
         function renderStep1() {
             stepContentElement.innerHTML = `
                 <h3>Workflow Explanation</h3>
-                <ul>
-                    <li>Step 1: Workflow explanation (this step)</li>
-                    <li>Step 2: Unlock the computer using keypad</li>
-                    <li>Step 3 - 6: Open the computer and select paintings that are shown on the computer</li>
-                    <li>Step 7: Run around and note the roman numerals underneath the 4 paintings</li>
-                    <li>Step 8 - 11: Open the computer again and select the modifier belonging to each painting</li>
-                    <li>Step 12: Input the resulting code shown at the end of this form</li>
-                </ul>
+                <ol>
+                    <li><strong>Understand the Workflow:</strong> (This is the current step you are reading).</li>
+                    <li><strong>Secure and Access:</strong> Lockdown the building, then unlock the computer using the keypad.</li>
+                    <li><strong>Select Paintings:</strong> Access the computer and select the paintings displayed on the screen.</li>
+                    <li><strong>Find Roman Numerals:</strong> Locate the four physical paintings you selected and note the Roman numeral beneath each one.</li>
+                    <li><strong>Select Modifiers:</strong> Return to the computer and select the modifiers that are displayed after each of the four paintings.</li>
+                    <li><strong>Escape:</strong> Input the final code (which will be displayed on the computer). Then, quickly head to the metro station.</li>
+                </ol>
+                <p><strong>Note:</strong> You can customize painting names in the configuration settings to match terms you're familiar with.</p>
                 <button class="action-button" id="step1-next">Yeah yeah, I know, NEXT!!</button>
             `;
             document.getElementById('step1-next').addEventListener('click', () => goNextStep());
@@ -1250,8 +1251,7 @@
 
                 breakdownHtml += `
                     <li>
-                        Digit ${i} (<strong>${displayName}</strong>, Mod ${modifierText}, Roman ${romanNumeralText}):
-                        ${romanNumeralText} (${romanNumeralValue}) ${modifierValue < 0 ? '-' : '+'} ${Math.abs(modifierValue)} = <strong>${resultDigit}</strong>
+                        Digit ${i} (${displayName}: ${romanNumeralText}, ${modifierText}): ${romanNumeralValue} ${modifierValue < 0 ? '-' : '+'} ${Math.abs(modifierValue)} = <strong>${resultDigit}</strong>
                     </li>`;
             }
             breakdownHtml += "</ul>";
