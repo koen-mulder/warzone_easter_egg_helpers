@@ -328,6 +328,113 @@
                 min-width: 40px;
             }
         }
+
+        /* Config Page Styles */
+        #config-btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.1em; /* Adjusted to match other header buttons better */
+            margin-left: 5px; /* Added for spacing */
+            margin-right: 5px; /* Added for spacing */
+        }
+        #config-btn:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        #config-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            z-index: 1100;
+            overflow-y: auto;
+            display: none; /* Initially hidden, JS will toggle */
+        }
+
+        #config-page-content {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        
+        #config-page-content h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #painting-config-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #painting-config-inputs div { /* Style for each dynamically generated input row */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #painting-config-inputs label {
+            flex-basis: 120px; /* Adjust as needed */
+            font-weight: bold;
+        }
+
+        #painting-config-inputs input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+
+        #save-config-btn, #reset-config-btn, #close-config-btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        #save-config-btn {
+            background-color: #28a745; /* Green */
+            color: white;
+        }
+        #save-config-btn:hover {
+            background-color: #218838;
+        }
+
+        #reset-config-btn {
+            background-color: #ffc107; /* Yellow */
+            color: #333;
+        }
+        #reset-config-btn:hover {
+            background-color: #e0a800;
+        }
+
+        #close-config-btn {
+            background-color: #6c757d; /* Gray */
+            color: white;
+        }
+        #close-config-btn:hover {
+            background-color: #5a6268;
+        }
+
     </style>
 </head>
 <body>
@@ -335,6 +442,7 @@
         <header id="app-header">
             <button id="prev-step-btn">< Back</button>
             <h2 id="step-title">Step Title</h2>
+            <button id="config-btn">&#x1F6E0;</button>
             <button id="next-step-btn">Next ></button>
         </header>
         <main id="step-content">
@@ -343,6 +451,24 @@
         <footer id="app-footer">
             <button id="restart-btn">Restart</button>
         </footer>
+    </div>
+
+    <div id="config-page" style="display: none;">
+        <div id="config-page-content">
+            <h2>Configure Painting Names</h2>
+            <div id="painting-config-inputs">
+                <!-- Input fields will be dynamically added here by JavaScript later -->
+                <!-- Example for one painting (for structure reference, JS will generate these):
+                <div>
+                    <label for="config-painting-horse">Horse:</label>
+                    <input type="text" id="config-painting-horse" data-painting-id="Horse">
+                </div>
+                -->
+            </div>
+            <button id="save-config-btn">Save Configuration</button>
+            <button id="reset-config-btn">Reset to Default</button>
+            <button id="close-config-btn">Close</button>
+        </div>
     </div>
 
     <div id="image-modal" class="modal">
@@ -367,9 +493,15 @@
             modifier4_value: null,
         };
 
-        const PICTURE_DATA = [
-            { name: "Horse" }, { name: "House" }, { name: "Snow" }, { name: "Tree" },
-            { name: "Boat" }, { name: "River" }, { name: "Owl" }, { name: "Lamb chop" }
+        let PICTURE_DATA = [ // Changed to let
+            { id: "Horse", defaultName: "Horse", displayName: "Horse" },
+            { id: "House", defaultName: "House", displayName: "House" },
+            { id: "Snow", defaultName: "Snow", displayName: "Snow" },
+            { id: "Tree", defaultName: "Tree", displayName: "Tree" },
+            { id: "Boat", defaultName: "Boat", displayName: "Boat" },
+            { id: "River", defaultName: "River", displayName: "River" },
+            { id: "Owl", defaultName: "Owl", displayName: "Owl" },
+            { id: "Lamb chop", defaultName: "Lamb chop", displayName: "Lamb chop" }
         ];
 
         const ROMAN_NUMERAL_OPTIONS = [
@@ -384,8 +516,12 @@
 
         // DOM Elements
         let stepTitleElement, stepContentElement, prevStepBtn, nextStepBtn, restartBtn, imageModal, modalImg, modalCloseBtn;
+        let configBtn, configPage, closeConfigBtn, appContainer; // Added new elements
+        let paintingConfigInputsContainer, saveConfigBtn, resetConfigBtn; // Added reset button
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadCustomNames(); // Load custom names first
+
             stepTitleElement = document.getElementById('step-title');
             stepContentElement = document.getElementById('step-content');
             prevStepBtn = document.getElementById('prev-step-btn');
@@ -394,6 +530,14 @@
             imageModal = document.getElementById('image-modal');
             modalImg = document.getElementById('modal-img-src');
             modalCloseBtn = document.getElementById('modal-close-btn');
+            appContainer = document.getElementById('app-container'); // Ensure appContainer is selected
+
+            configBtn = document.getElementById('config-btn');
+            configPage = document.getElementById('config-page');
+            closeConfigBtn = document.getElementById('close-config-btn');
+            paintingConfigInputsContainer = document.getElementById('painting-config-inputs');
+            saveConfigBtn = document.getElementById('save-config-btn'); 
+            resetConfigBtn = document.getElementById('reset-config-btn'); // Select the reset button
 
             prevStepBtn.addEventListener('click', goPrevStep);
             nextStepBtn.addEventListener('click', goNextStep);
@@ -406,10 +550,143 @@
             });
             
             renderCurrentStep();
+
+            if(configBtn) {
+                configBtn.addEventListener('click', showConfigPage);
+            }
+            if(closeConfigBtn) {
+                closeConfigBtn.addEventListener('click', hideConfigPage);
+            }
+            if(saveConfigBtn) { 
+                saveConfigBtn.addEventListener('click', saveCustomNames);
+            }
+            if(resetConfigBtn) { // Add event listener for reset button
+                resetConfigBtn.addEventListener('click', resetCustomNamesToDefault);
+            }
         });
 
-        function getPictureImageSrc(pictureName, type) {
+        // New functions for config page visibility
+        function showConfigPage() {
+            if(appContainer) appContainer.style.display = 'none';
+            if(configPage) configPage.style.display = 'block';
+            populateConfigInputs(); // Populate/refresh inputs each time config page is shown
+        }
+
+        function hideConfigPage() {
+            if(configPage) configPage.style.display = 'none';
+            if(appContainer) appContainer.style.display = 'flex'; // app-container uses flex
+            renderCurrentStep(); // Re-render main view when config is closed to reflect changes
+        }
+
+        function saveCustomNames() {
+            const customNamesToStore = {};
+            let changesMade = false;
+
+            // Select all relevant input fields from the config page
+            const inputElements = document.querySelectorAll('#painting-config-inputs input[type="text"]');
+
+            inputElements.forEach(inputElement => {
+                const paintingId = inputElement.dataset.paintingId;
+                const newDisplayName = inputElement.value.trim();
+                
+                const picture = PICTURE_DATA.find(p => p.id === paintingId);
+                if (picture) {
+                    let finalName = newDisplayName || picture.defaultName; // Use default if input is empty
+
+                    if (picture.displayName !== finalName) {
+                        picture.displayName = finalName;
+                        changesMade = true;
+                    }
+                    customNamesToStore[picture.id] = picture.displayName;
+                }
+            });
+
+            if (changesMade) {
+                localStorage.setItem('customPaintingNames', JSON.stringify(customNamesToStore));
+                alert('Configuration saved!');
+            } else {
+                alert('No changes detected or names are empty.');
+            }
+
+            // Refresh the input fields to show trimmed values or reverted defaults
+            populateConfigInputs(); 
+            
+            // Changes will be reflected when user navigates or closes config (due to renderCurrentStep in hideConfigPage)
+        }
+
+        function resetCustomNamesToDefault() {
+            const confirmReset = confirm("Are you sure you want to reset all painting names to their defaults? This cannot be undone.");
+            if (confirmReset) {
+                // Clear the custom names from localStorage
+                localStorage.removeItem('customPaintingNames');
+
+                // Reset displayName for each painting in PICTURE_DATA back to its defaultName
+                PICTURE_DATA.forEach(pic => {
+                    pic.displayName = pic.defaultName;
+                });
+
+                // Repopulate the input fields on the configuration page to show the defaults
+                populateConfigInputs();
+
+                alert('Painting names have been reset to default.');
+
+                // Similar to saving, if the main app view needs immediate refresh:
+                // The hideConfigPage function (if it calls renderCurrentStep) will handle this
+                // when the user closes the config page.
+            }
+        }
+
+        function loadCustomNames() {
+            const storedNames = localStorage.getItem('customPaintingNames');
+            if (storedNames) {
+                try {
+                    const customNames = JSON.parse(storedNames); // This should be an object like {Horse: "My Horse", ...}
+                    PICTURE_DATA.forEach(pic => {
+                        if (customNames[pic.id]) {
+                            pic.displayName = customNames[pic.id];
+                        } else {
+                            pic.displayName = pic.defaultName; // Fallback if a specific ID is not in storedNames
+                        }
+                    });
+                } catch (e) {
+                    console.error("Error parsing custom painting names from localStorage:", e);
+                    // Fallback to default names if parsing fails
+                    PICTURE_DATA.forEach(pic => pic.displayName = pic.defaultName);
+                }
+            } else {
+                // No custom names stored, ensure displayNames are set to defaultNames
+                PICTURE_DATA.forEach(pic => pic.displayName = pic.defaultName);
+            }
+        }
+
+        function populateConfigInputs() {
+            if (!paintingConfigInputsContainer) return;
+            paintingConfigInputsContainer.innerHTML = ''; // Clear any existing inputs
+
+            PICTURE_DATA.forEach(pic => {
+                const inputDiv = document.createElement('div');
+                // inputDiv.className = 'config-input-item'; // Using existing #painting-config-inputs div styles
+
+                const label = document.createElement('label');
+                label.htmlFor = `config-painting-${pic.id.replace(/ /g, '_')}`;
+                label.textContent = `${pic.defaultName}:`; // Label with default name for clarity
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `config-painting-${pic.id.replace(/ /g, '_')}`;
+                input.dataset.paintingId = pic.id; // Store original ID for saving
+                input.value = pic.displayName; // Set current display name
+
+                inputDiv.appendChild(label);
+                inputDiv.appendChild(input);
+                paintingConfigInputsContainer.appendChild(inputDiv);
+            });
+        }
+
+        function getPictureImageSrc(pictureName, type) { // pictureName here is actually picture.id
             if (!pictureName) return ""; // Or a placeholder
+            // Currently, pictureName is expected to be the 'id' (original name) from PICTURE_DATA
+            // This will be updated later if necessary to distinguish between id and displayName for image paths
             return `images/${pictureName.toLowerCase().replace(/ /g, '_')}_${type}.PNG`;
         }
         
@@ -551,11 +828,11 @@
             const appDataKey = `painting${paintingNum}_picture`;
             let gridHtml = '<div class="picture-grid">';
             PICTURE_DATA.forEach(pic => {
-                const isSelected = appData[appDataKey] === pic.name;
+                const isSelected = appData[appDataKey] === pic.id; // Use pic.id for data storage
                 gridHtml += `
-                    <div class="picture-item ${isSelected ? 'selected' : ''}" data-picture-name="${pic.name}">
-                        <img src="${getPictureImageSrc(pic.name, 'screen')}" alt="${pic.name} screen version">
-                        <span>${pic.name}</span>
+                    <div class="picture-item ${isSelected ? 'selected' : ''}" data-picture-id="${pic.id}">
+                        <img src="${getPictureImageSrc(pic.id, 'screen')}" alt="${pic.displayName} screen version">
+                        <span>${pic.displayName}</span>
                     </div>
                 `;
             });
@@ -564,7 +841,7 @@
 
             document.querySelectorAll('.picture-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    appData[appDataKey] = item.dataset.pictureName;
+                    appData[appDataKey] = item.dataset.pictureId; // Store pic.id
                     // Re-render to update selection visuals and then auto-advance
                     renderCurrentStep(); // This updates selection class
                     if (currentStep < 7) { // Auto-advance from painting steps to next or Roman Numerals
@@ -583,21 +860,24 @@
             }
 
             let html = '';
-            uniquePictures.forEach(picName => {
-                const screenSrc = getPictureImageSrc(picName, 'screen');
-                const paintingSrc = getPictureImageSrc(picName, 'painting');
-                const currentRomanValue = appData.romanNumerals[picName] || null;
+            uniquePictures.forEach(picId => { // Now iterates over pic IDs
+                const picData = PICTURE_DATA.find(p => p.id === picId);
+                if (!picData) return; // Should not happen if data is consistent
+
+                const screenSrc = getPictureImageSrc(picData.id, 'screen');
+                const paintingSrc = getPictureImageSrc(picData.id, 'painting');
+                const currentRomanValue = appData.romanNumerals[picData.id] || null;
 
                 html += `
                     <div class="roman-numeral-item">
                         <div class="roman-numeral-images">
-                            <img src="${screenSrc}" alt="${picName} screen">
-                            <img src="${paintingSrc}" alt="${picName} painting" class="painting-image-preview" data-painting-src="${paintingSrc}">
+                            <img src="${screenSrc}" alt="${picData.displayName} screen">
+                            <img src="${paintingSrc}" alt="${picData.displayName} painting" class="painting-image-preview" data-painting-src="${paintingSrc}">
                         </div>
                         <div class="roman-numeral-details">
-                            <label for="roman-${picName.replace(/ /g, '_')}">${picName}:</label>
-                            <select id="roman-${picName.replace(/ /g, '_')}" data-picture-name="${picName}">
-                                ${ROMAN_NUMERAL_OPTIONS.map(opt => 
+                            <label for="roman-${picData.id.replace(/ /g, '_')}">${picData.displayName}:</label>
+                            <select id="roman-${picData.id.replace(/ /g, '_')}" data-picture-id="${picData.id}">
+                                ${ROMAN_NUMERAL_OPTIONS.map(opt =>
                                     `<option value="${opt.value}" ${opt.value === currentRomanValue ? 'selected' : ''}>${opt.text}</option>`
                                 ).join('')}
                             </select>
@@ -609,9 +889,9 @@
 
             document.querySelectorAll('.roman-numeral-details select').forEach(select => {
                 select.addEventListener('change', (event) => {
-                    const selectedPicName = event.target.dataset.pictureName;
+                    const selectedPicId = event.target.dataset.pictureId; // Use pictureId
                     const value = event.target.value === "null" ? null : parseInt(event.target.value);
-                    appData.romanNumerals[selectedPicName] = value;
+                    appData.romanNumerals[selectedPicId] = value;
                     updateNavigationButtonsState(); // Update nav immediately
                     
                     if (areAllRomanNumeralsAssigned()) {
@@ -641,14 +921,19 @@
         function renderModifierSelectionStep(modifierNum) {
             const paintingKey = `painting${modifierNum}_picture`;
             const modifierKey = `modifier${modifierNum}_value`;
-            const selectedPictureName = appData[paintingKey];
+            const selectedPictureId = appData[paintingKey]; // This is an ID
 
-            if (!selectedPictureName) {
+            if (!selectedPictureId) {
                 stepContentElement.innerHTML = `<p>No painting selected for Painting ${modifierNum}. Please go back and select one.</p>`;
                 return;
             }
+            const picData = PICTURE_DATA.find(p => p.id === selectedPictureId);
+            if (!picData) {
+                stepContentElement.innerHTML = `<p>Error: Painting data not found for ID ${selectedPictureId}.</p>`;
+                return;
+            }
 
-            const screenSrc = getPictureImageSrc(selectedPictureName, 'screen');
+            const screenSrc = getPictureImageSrc(picData.id, 'screen');
             const currentModifier = appData[modifierKey];
 
             let modifierButtonsHtml = '<div class="modifier-groups">';
@@ -676,8 +961,8 @@
 
             stepContentElement.innerHTML = `
                 <div class="modifier-display-painting">
-                    <img src="${screenSrc}" alt="${selectedPictureName} screen">
-                    <p>${selectedPictureName}</p>
+                    <img src="${screenSrc}" alt="${picData.displayName} screen">
+                    <p>${picData.displayName}</p>
                 </div>
                 ${modifierButtonsHtml}
             `;
@@ -701,10 +986,12 @@
             if (!appData.painting3_picture) missingInfo.push("Painting 3 selection");
             if (!appData.painting4_picture) missingInfo.push("Painting 4 selection");
 
-            const uniquePictures = getUniqueSelectedPictures();
-            uniquePictures.forEach(pic => {
-                if (appData.romanNumerals[pic] === undefined || appData.romanNumerals[pic] === null) {
-                    missingInfo.push(`Roman numeral for ${pic}`);
+            const uniquePictures = getUniqueSelectedPictures(); // This returns array of IDs
+            uniquePictures.forEach(picId => {
+                const picData = PICTURE_DATA.find(p => p.id === picId);
+                const displayName = picData ? picData.displayName : picId; // Fallback to ID if not found (should not happen)
+                if (appData.romanNumerals[picId] === undefined || appData.romanNumerals[picId] === null) {
+                    missingInfo.push(`Roman numeral for ${displayName}`);
                 }
             });
             
@@ -734,13 +1021,16 @@
             let breakdownHtml = "<h3>Calculation Breakdown:</h3><ul>";
 
             for (let i = 1; i <= 4; i++) {
-                const pictureName = appData[`painting${i}_picture`];
-                const modifierValue = appData[`modifier${i}_value`];
-                const romanNumeralValue = appData.romanNumerals[pictureName];
+                const pictureId = appData[`painting${i}_picture`]; // This is an ID
+                const picData = PICTURE_DATA.find(p => p.id === pictureId);
+                const displayName = picData ? picData.displayName : pictureId; // Fallback to ID
 
-                if (pictureName === null || modifierValue === null || romanNumeralValue === null || romanNumeralValue === undefined) {
+                const modifierValue = appData[`modifier${i}_value`];
+                const romanNumeralValue = appData.romanNumerals[pictureId];
+
+                if (pictureId === null || modifierValue === null || romanNumeralValue === null || romanNumeralValue === undefined) {
                     // This check is a safeguard; primary check is `missingInfo` above.
-                    stepContentElement.innerHTML = `<p>Error: Data inconsistency for item ${i}. Please review previous steps.</p>`;
+                    stepContentElement.innerHTML = `<p>Error: Data inconsistency for item ${i} (${displayName}). Please review previous steps.</p>`;
                     return;
                 }
                 
@@ -752,7 +1042,7 @@
 
                 breakdownHtml += `
                     <li>
-                        Digit ${i} (<strong>${pictureName}</strong>, Mod ${modifierText}, Roman ${romanNumeralText}):
+                        Digit ${i} (<strong>${displayName}</strong>, Mod ${modifierText}, Roman ${romanNumeralText}):
                         ${romanNumeralText} (${romanNumeralValue}) ${modifierValue < 0 ? '-' : '+'} ${Math.abs(modifierValue)} = <strong>${resultDigit}</strong>
                     </li>`;
             }
