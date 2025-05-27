@@ -47,6 +47,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9em;
+            white-space: nowrap; /* Added to prevent text wrapping */
         }
         #app-header button:disabled {
             background-color: #aaa;
@@ -740,8 +741,6 @@
 
             if (currentStep === MAX_STEPS) {
                 nextStepBtn.disabled = true;
-            } else if (currentStep === 1 || currentStep === 2) { // Steps with on-page buttons for next
-                nextStepBtn.disabled = true;
             } else if (currentStep >= 3 && currentStep <= 6) { // Painting selection steps
                 const paintingKey = `painting${currentStep - 2}_picture`;
                 nextStepBtn.disabled = !appData[paintingKey];
@@ -781,15 +780,15 @@
             switch (currentStep) {
                 case 1: title = "Workflow"; renderStep1(); break;
                 case 2: title = "Lockdown"; renderStep2(); break;
-                case 3: title = "Painting 1: Select painting"; renderPaintingSelectionStep(1); break;
-                case 4: title = "Painting 2: Select painting"; renderPaintingSelectionStep(2); break;
-                case 5: title = "Painting 3: Select painting"; renderPaintingSelectionStep(3); break;
-                case 6: title = "Painting 4: Select painting"; renderPaintingSelectionStep(4); break;
+                case 3: title = "Select painting 1"; renderPaintingSelectionStep(1); break;
+                case 4: title = "Select painting 2"; renderPaintingSelectionStep(2); break;
+                case 5: title = "Select painting 3"; renderPaintingSelectionStep(3); break;
+                case 6: title = "Select painting 4"; renderPaintingSelectionStep(4); break;
                 case 7: title = "Roman numerals"; renderRomanNumeralsStep(); break;
-                case 8: title = "Modifier painting 1: Select modifier"; renderModifierSelectionStep(1); break;
-                case 9: title = "Modifier painting 2: Select modifier"; renderModifierSelectionStep(2); break;
-                case 10: title = "Modifier painting 3: Select modifier"; renderModifierSelectionStep(3); break;
-                case 11: title = "Modifier painting 4: Select modifier"; renderModifierSelectionStep(4); break;
+                case 8: title = "Select modifier 1"; renderModifierSelectionStep(1); break;
+                case 9: title = "Select modifier 2"; renderModifierSelectionStep(2); break;
+                case 10: title = "Select modifier 3"; renderModifierSelectionStep(3); break;
+                case 11: title = "Select modifier 4"; renderModifierSelectionStep(4); break;
                 case 12: title = "Result"; renderResultStep(); break;
             }
             stepTitleElement.textContent = title;
