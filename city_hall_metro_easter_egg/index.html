@@ -181,6 +181,54 @@
             min-width: 150px; /* Ensure select is usable */
         }
 
+        /* Roman Numeral Button Input Styling */
+        .roman-numeral-item .roman-numeral-details {
+            /* Ensure this container can accommodate button groups if not already flexible */
+            display: flex; /* Already there, good */
+            align-items: center; /* Already there, good */
+            gap: 10px; /* Already there, good */
+        }
+
+        .roman-numeral-item .roman-numeral-details label {
+            font-weight: bold;
+            margin-right: 5px; /* Already there */
+            flex-shrink: 0; /* Already there */
+            /* Consider adjusting flex-basis or width if button groups make lines too long */
+            /* For now, existing label style should be okay */
+        }
+
+        .roman-button-group {
+            display: flex;
+            flex-wrap: wrap; /* Allow buttons to wrap if many options */
+            gap: 10px; /* Spacing between buttons */
+            flex-grow: 1;
+            justify-content: flex-start; /* Align buttons to the start */
+        }
+
+        .roman-numeral-btn {
+            padding: 10px 15px;
+            font-size: 1.1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            min-width: 50px; /* Ensure a decent tap target */
+            text-align: center;
+        }
+
+        .roman-numeral-btn:hover {
+            background-color: #e0e0e0;
+            border-color: #bbb;
+        }
+
+        .roman-numeral-btn.selected {
+            background-color: #007bff;
+            color: white;
+            border-color: #0056b3;
+            font-weight: bold;
+        }
+
         /* Modifier selection styling */
         .modifier-display-painting img {
             width: 110px;
@@ -328,6 +376,44 @@
                 font-size: 1em;
                 min-width: 40px;
             }
+            /* Roman Numeral Buttons Responsive */
+            .roman-numeral-btn {
+                padding: 8px 10px;
+                font-size: 1em;
+                min-width: 40px;
+            }
+            .roman-button-group {
+                gap: 8px;
+            }
+        }
+
+        /* Configuration Page Sections */
+        .config-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .config-section h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .config-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .config-option input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .config-option label {
+            cursor: pointer;
         }
 
         /* Config Page Styles */
@@ -466,6 +552,19 @@
                 </div>
                 -->
             </div>
+
+            <div class="config-section">
+                <h4>Roman Numeral Input Style</h4>
+                <div class="config-option">
+                    <input type="radio" id="roman-input-dropdown" name="romanInputStyle" value="dropdown" checked>
+                    <label for="roman-input-dropdown">Dropdown List</label>
+                </div>
+                <div class="config-option">
+                    <input type="radio" id="roman-input-buttons" name="romanInputStyle" value="buttons">
+                    <label for="roman-input-buttons">Buttons</label>
+                </div>
+            </div>
+
             <button id="save-config-btn">Save Configuration</button>
             <button id="reset-config-btn">Reset to Default</button>
             <button id="close-config-btn">Close</button>
@@ -480,6 +579,7 @@
     <script>
         const MAX_STEPS = 12;
         let currentStep = 1;
+        let currentRomanInputStyle = 'dropdown'; // Default value
 
         // Data for selections
         let appData = {
@@ -581,7 +681,7 @@
 
         function saveCustomNames() {
             const customNamesToStore = {};
-            let changesMade = false;
+            let namesChanged = false; // Specifically for painting names
 
             // Select all relevant input fields from the config page
             const inputElements = document.querySelectorAll('#painting-config-inputs input[type="text"]');
@@ -596,17 +696,35 @@
 
                     if (picture.displayName !== finalName) {
                         picture.displayName = finalName;
-                        changesMade = true;
+                        namesChanged = true;
                     }
                     customNamesToStore[picture.id] = picture.displayName;
                 }
             });
 
-            if (changesMade) {
+            if (namesChanged) {
                 localStorage.setItem('customPaintingNames', JSON.stringify(customNamesToStore));
-                alert('Configuration saved!');
+            }
+
+            // Save Roman Numeral Input Style
+            const selectedStyleElement = document.querySelector('input[name="romanInputStyle"]:checked');
+            let styleChanged = false;
+            if (selectedStyleElement) {
+                if (currentRomanInputStyle !== selectedStyleElement.value) {
+                    currentRomanInputStyle = selectedStyleElement.value;
+                    styleChanged = true;
+                }
+                localStorage.setItem('romanNumeralInputStyle', currentRomanInputStyle);
+            }
+
+            if (namesChanged && styleChanged) {
+                alert('Painting names and input style saved!');
+            } else if (namesChanged) {
+                alert('Painting names saved!');
+            } else if (styleChanged) {
+                alert('Roman numeral input style saved!');
             } else {
-                alert('No changes detected or names are empty.');
+                alert('No changes detected.');
             }
 
             // Refresh the input fields to show trimmed values or reverted defaults
@@ -616,20 +734,23 @@
         }
 
         function resetCustomNamesToDefault() {
-            const confirmReset = confirm("Are you sure you want to reset all painting names to their defaults? This cannot be undone.");
+            const confirmReset = confirm("Are you sure you want to reset all painting names and input style to their defaults? This cannot be undone.");
             if (confirmReset) {
                 // Clear the custom names from localStorage
                 localStorage.removeItem('customPaintingNames');
-
                 // Reset displayName for each painting in PICTURE_DATA back to its defaultName
                 PICTURE_DATA.forEach(pic => {
                     pic.displayName = pic.defaultName;
                 });
 
+                // Reset Roman Numeral Input Style
+                currentRomanInputStyle = 'dropdown'; // Reset to default
+                localStorage.setItem('romanNumeralInputStyle', currentRomanInputStyle);
+
                 // Repopulate the input fields on the configuration page to show the defaults
                 populateConfigInputs();
 
-                alert('Painting names have been reset to default.');
+                alert('Configuration has been reset to default.');
 
                 // Similar to saving, if the main app view needs immediate refresh:
                 // The hideConfigPage function (if it calls renderCurrentStep) will handle this
@@ -637,26 +758,34 @@
             }
         }
 
-        function loadCustomNames() {
+        function loadCustomNames() { // Renamed in thought, but keeping as loadCustomNames for simplicity as per prompt
+            // Load Painting Names
             const storedNames = localStorage.getItem('customPaintingNames');
             if (storedNames) {
                 try {
-                    const customNames = JSON.parse(storedNames); // This should be an object like {Horse: "My Horse", ...}
+                    const customNames = JSON.parse(storedNames);
                     PICTURE_DATA.forEach(pic => {
                         if (customNames[pic.id]) {
                             pic.displayName = customNames[pic.id];
                         } else {
-                            pic.displayName = pic.defaultName; // Fallback if a specific ID is not in storedNames
+                            pic.displayName = pic.defaultName;
                         }
                     });
                 } catch (e) {
                     console.error("Error parsing custom painting names from localStorage:", e);
-                    // Fallback to default names if parsing fails
                     PICTURE_DATA.forEach(pic => pic.displayName = pic.defaultName);
                 }
             } else {
-                // No custom names stored, ensure displayNames are set to defaultNames
                 PICTURE_DATA.forEach(pic => pic.displayName = pic.defaultName);
+            }
+
+            // Load Roman Numeral Input Style
+            const savedRomanInputStyle = localStorage.getItem('romanNumeralInputStyle');
+            if (savedRomanInputStyle && (savedRomanInputStyle === 'dropdown' || savedRomanInputStyle === 'buttons')) {
+                currentRomanInputStyle = savedRomanInputStyle;
+            } else {
+                currentRomanInputStyle = 'dropdown'; // Default if nothing valid is stored
+                localStorage.setItem('romanNumeralInputStyle', currentRomanInputStyle); // Optional: store default
             }
         }
 
@@ -682,6 +811,13 @@
                 inputDiv.appendChild(input);
                 paintingConfigInputsContainer.appendChild(inputDiv);
             });
+
+            // Set radio buttons for Roman numeral input style
+            if (currentRomanInputStyle === 'buttons') {
+                document.getElementById('roman-input-buttons').checked = true;
+            } else {
+                document.getElementById('roman-input-dropdown').checked = true; // Default
+            }
         }
 
         function getPictureImageSrc(pictureName, type) { // pictureName here is actually picture.id
@@ -855,55 +991,128 @@
             const uniquePictures = getUniqueSelectedPictures();
             if (uniquePictures.length === 0) {
                 stepContentElement.innerHTML = "<p>No pictures selected yet. Please select pictures in Painting 1-4 steps.</p>";
+                updateNavigationButtonsState(); // Ensure nav is updated even if no pictures
                 return;
             }
 
             let html = '';
-            uniquePictures.forEach(picId => { // Now iterates over pic IDs
+            uniquePictures.forEach(picId => { // Changed variable name for clarity
                 const picData = PICTURE_DATA.find(p => p.id === picId);
-                if (!picData) return; // Should not happen if data is consistent
+                if (!picData) return; // Should not happen if uniquePictures is derived correctly
 
-                const screenSrc = getPictureImageSrc(picData.id, 'screen');
-                const paintingSrc = getPictureImageSrc(picData.id, 'painting');
-                const currentRomanValue = appData.romanNumerals[picData.id] || null;
+                const displayName = picData.displayName;
+                const screenSrc = getPictureImageSrc(picId, 'screen');
+                const paintingSrc = getPictureImageSrc(picId, 'painting');
+                const currentRomanValue = appData.romanNumerals[picId] || null;
 
                 html += `
-                    <div class="roman-numeral-item">
+                    <div class="roman-numeral-item" data-picture-id="${picId}">
                         <div class="roman-numeral-images">
-                            <img src="${screenSrc}" alt="${picData.displayName} screen">
-                            <img src="${paintingSrc}" alt="${picData.displayName} painting" class="painting-image-preview" data-painting-src="${paintingSrc}">
+                            <img src="${screenSrc}" alt="${displayName} screen">
+                            <img src="${paintingSrc}" alt="${displayName} painting" class="painting-image-preview" data-painting-src="${paintingSrc}">
                         </div>
                         <div class="roman-numeral-details">
-                            <label for="roman-${picData.id.replace(/ /g, '_')}">${picData.displayName}:</label>
-                            <select id="roman-${picData.id.replace(/ /g, '_')}" data-picture-id="${picData.id}">
-                                ${ROMAN_NUMERAL_OPTIONS.map(opt =>
-                                    `<option value="${opt.value}" ${opt.value === currentRomanValue ? 'selected' : ''}>${opt.text}</option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                    </div>
-                `;
+                            <label for="roman-input-${picId.replace(/ /g, '_')}">${displayName}:</label>`; // Changed label 'for' to be more generic initially
+
+                if (currentRomanInputStyle === 'buttons') {
+                    html += `<div class="roman-button-group" id="roman-input-${picId.replace(/ /g, '_')}">`;
+                    ROMAN_NUMERAL_OPTIONS.forEach(opt => {
+                        if (opt.value === null) return; // Skip "Select Roman Numeral"
+                        const isSelected = opt.value === currentRomanValue;
+                        const romanNumeralChar = opt.text.split(' ')[0]; // e.g., "V"
+                        const numericValue = opt.value; // e.g., 5
+                        html += `<button class="roman-numeral-btn ${isSelected ? 'selected' : ''}" 
+                                         data-picture-id="${picId}" 
+                                         data-value="${numericValue}">
+                                         <span style="font-weight:bold;">${romanNumeralChar}</span> <span style="color: #555555;">(${numericValue})</span>
+                                 </button>`;
+                    });
+                    html += `</div>`;
+                } else { // Default to dropdown
+                    html += `<select class="roman-numeral-select" id="roman-input-${picId.replace(/ /g, '_')}" data-picture-id="${picId}">`; // Added class for easier selection
+                    ROMAN_NUMERAL_OPTIONS.forEach(opt => {
+                        html += `<option value="${opt.value === null ? '' : opt.value}" ${opt.value === currentRomanValue ? 'selected' : ''}>${opt.text}</option>`;
+                    });
+                    html += `</select>`;
+                }
+                html += `   </div> <!-- closes roman-numeral-details -->
+                        </div> <!-- closes roman-numeral-item -->`;
             });
+
             stepContentElement.innerHTML = html;
 
-            document.querySelectorAll('.roman-numeral-details select').forEach(select => {
-                select.addEventListener('change', (event) => {
-                    const selectedPicId = event.target.dataset.pictureId; // Use pictureId
-                    const value = event.target.value === "null" ? null : parseInt(event.target.value);
-                    appData.romanNumerals[selectedPicId] = value;
-                    updateNavigationButtonsState(); // Update nav immediately
-                    
-                    if (areAllRomanNumeralsAssigned()) {
-                        setTimeout(goNextStep, 100); // Auto-advance if all assigned
-                    }
-                });
-            });
-            
+            // Attach common event listeners
             document.querySelectorAll('.painting-image-preview').forEach(img => {
                 img.addEventListener('click', (event) => {
                     openModal(event.target.dataset.paintingSrc);
                 });
             });
+
+            // Attach specific event listeners based on input style
+            if (currentRomanInputStyle === 'buttons') {
+                document.querySelectorAll('.roman-numeral-btn').forEach(button => {
+                    button.addEventListener('click', handleRomanNumeralButtonClick); // This function will be created in next step
+                });
+            } else {
+                document.querySelectorAll('.roman-numeral-select').forEach(select => { // Target by new class
+                    select.addEventListener('change', (event) => {
+                        const selectedPicId = event.target.dataset.pictureId; // Changed to pictureId
+                        const value = event.target.value === "" ? null : parseInt(event.target.value);
+                        appData.romanNumerals[selectedPicId] = value;
+                        updateNavigationButtonsState();
+                        if (areAllRomanNumeralsAssigned()) {
+                            setTimeout(goNextStep, 100);
+                        }
+                    });
+                });
+            }
+            updateNavigationButtonsState(); // Call once after setup
+        }
+
+        function handleRomanNumeralButtonClick(event) {
+            const clickedButton = event.currentTarget; 
+            const picId = clickedButton.dataset.pictureId;
+            const value = parseInt(clickedButton.dataset.value);
+
+            if (!picId || isNaN(value)) {
+                console.error("Button click error: Missing pictureId or value", clickedButton.dataset);
+                return;
+            }
+
+            // Update appData
+            appData.romanNumerals[picId] = value;
+
+            // Update button visual selection within the same group
+            const buttonGroupId = `roman-input-${picId.replace(/ /g, '_')}`;
+            const buttonGroup = document.getElementById(buttonGroupId);
+
+            if (buttonGroup) {
+                const buttonsInGroup = buttonGroup.querySelectorAll('.roman-numeral-btn');
+                buttonsInGroup.forEach(btn => {
+                    if (btn === clickedButton) {
+                        btn.classList.add('selected');
+                    } else {
+                        btn.classList.remove('selected');
+                    }
+                });
+            } else {
+                // Fallback/alternative if direct parent traversal is preferred and structure is known
+                // This assumes the button group is the direct parent. Adjust if structure is different.
+                // console.warn("Button group not found by ID, trying parent traversal for:", picId);
+                // const parentGroup = clickedButton.parentElement;
+                // if (parentGroup && parentGroup.classList.contains('roman-button-group')) {
+                //     parentGroup.querySelectorAll('.roman-numeral-btn').forEach(btn => {
+                //         btn.classList.remove('selected');
+                //     });
+                //     clickedButton.classList.add('selected');
+                // }
+            }
+            
+            // Update navigation and potentially auto-advance
+            updateNavigationButtonsState();
+            if (areAllRomanNumeralsAssigned()) {
+                setTimeout(goNextStep, 100);
+            }
         }
         
         function openModal(imageSrc) {
