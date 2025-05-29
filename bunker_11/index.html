@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bunker 11 Easter Egg Helper</title>
+    <style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background-color: #1a1a1a; /* Dark theme for Bunker 11 */
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-size: 16px;
+}
+
+#app-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #2c2c2c; /* Darker container */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+#app-header {
+    background-color: #004d00; /* Dark green for military theme */
+    color: white;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+#app-header button {
+    background-color: #003300; /* Darker green */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+#app-header button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+#step-title {
+    font-size: 1.1em;
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+    padding: 0 10px;
+}
+
+#step-content {
+    padding: 20px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+#step-content h3 {
+    margin-top: 0;
+    color: #4CAF50; /* Green accent */
+}
+
+#app-footer {
+    padding: 15px;
+    text-align: center;
+    border-top: 1px solid #444;
+}
+
+#restart-btn {
+    background-color: #b30000; /* Dark red */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+}
+#restart-btn:hover {
+    background-color: #800000;
+}
+
+.action-button {
+    background-color: #006400; /* Dark green */
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    width: 100%;
+    margin-top: 20px;
+    display: block;
+}
+.action-button:hover {
+    background-color: #004d00;
+}
+
+/* Styles for Russian numbers (Step 3) */
+.number-list-container {
+    margin-bottom: 15px;
+}
+.number-list-controls {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.number-list-controls label {
+    margin-right: 5px;
+}
+.number-list-controls select, .number-list-controls button {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+}
+#step3-sort-order-dropdown { /* Style for the new dropdown */
+    flex-grow: 1; /* Allow it to take available space */
+}
+
+.number-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+.number-btn {
+    padding: 10px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: left; /* Keep this for overall button alignment */
+    line-height: 1.4; /* Adjust for multi-span content */
+}
+.number-btn:hover {
+    background-color: #4a4a4a;
+}
+.selected-numbers-container {
+    margin-top: 20px;
+}
+.selected-numbers-list {
+    list-style-type: none;
+    padding: 0;
+    min-height: 50px; /* For drag-drop visibility */
+    border: 1px dashed #555;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #202020;
+}
+.selected-numbers-list li {
+    background-color: #b30000; /* Red background for selected numbers */
+    color: white;
+    padding: 8px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+    cursor: grab; /* For draggable items */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 1.4; /* Adjust for multi-span content */
+}
+.selected-numbers-list li .remove-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin-left: 10px; /* Space it from move buttons */
+}
+.move-btn { /* Styling for new move buttons */
+    background: none;
+    border: 1px solid #ccc;
+    color: #ccc;
+    font-size: 0.8em;
+    padding: 2px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+.move-btn:hover {
+    background-color: #555;
+    color: white;
+}
+
+/* Styles for Step 4 Phone Detail Images */
+.phone-detail-images {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center;   /* Center items horizontally */
+    gap: 10px;             /* Add space between images */
+    margin-bottom: 10px;   /* Add some space below the group of images */
+}
+.phone-detail-images img.zoomable-image { /* More specific selector */
+    max-width: 80%; /* Allow images to be wider now they are stacked */
+    height: auto;
+    margin: 0; /* Remove horizontal margins */
+    min-width: 0; /* Reset min-width if it was set for horizontal layout */
+}
+
+
+/* Modal styling */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    padding-top: 50px; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.9);
+}
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 90%;
+    max-width: 700px;
+}
+.modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.modal-close-btn:hover,
+.modal-close-btn:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+.zoomable-image {
+    cursor: pointer;
+    max-width: 100%; 
+    height: auto;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+/* Configuration Page Styles */
+#config-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1e1e1e; 
+    z-index: 1100;
+    overflow-y: auto;
+    display: none; 
+}
+#config-page-content {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #2c2c2c;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+#config-page-content h2 {
+    text-align: center;
+    color: #4CAF50;
+    margin-bottom: 20px;
+}
+.config-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #444;
+}
+.config-section:last-child {
+    border-bottom: none;
+}
+.config-section h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #ccc;
+}
+.config-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.config-option input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+.config-option label {
+    cursor: pointer;
+    color: #e0e0e0;
+}
+#config-page-content button {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    text-align: center;
+    color: white;
+}
+#save-config-btn { background-color: #006400; } 
+#save-config-btn:hover { background-color: #004d00; }
+#reset-config-btn { background-color: #b30000; } 
+#reset-config-btn:hover { background-color: #800000; }
+#close-config-btn { background-color: #555; } 
+#close-config-btn:hover { background-color: #444; }
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    #app-header {
+        padding: 8px 10px;
+    }
+    #app-header button {
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+    #step-title {
+        font-size: 1em;
+    }
+    #step-content {
+        padding: 15px;
+    }
+    .number-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Adjusted for potentially wider buttons */
+    }
+    .number-btn {
+        font-size: 0.9em;
+        display: flex; 
+        flex-direction: column;
+    }
+    .selected-numbers-list li { 
+        flex-wrap: wrap;
+    }
+    .selected-numbers-list li .remove-btn {
+        margin-left: auto; 
+    }
+    .move-btn {
+        font-size: 1em; 
+        padding: 3px 6px;
+    }
+    .phone-detail-images img.zoomable-image { 
+        max-width: 95%; 
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <header id="app-header">
+            <button id="prev-step-btn">&lt; Back</button>
+            <h2 id="step-title">Step Title</h2>
+            <button id="config-btn">&#x1F6E0;</button> 
+            <button id="next-step-btn">Next &gt;</button>
+        </header>
+        <main id="step-content">
+            <!-- Content for the current step will be injected here by JavaScript -->
+        </main>
+        <footer id="app-footer">
+            <button id="restart-btn">Restart</button>
+        </footer>
+    </div>
+
+    <div id="config-page" style="display: none;">
+        <div id="config-page-content">
+            <h2>Configuration</h2>
+
+            <div class="config-section">
+                <h4>Russian Code Auto-Progress</h4>
+                <div class="config-option">
+                    <input type="checkbox" id="config-auto-progress">
+                    <label for="config-auto-progress">Auto-progress after 3 numbers selected</label>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h4>Default Sort Order (Step 3)</h4>
+                <div class="config-option">
+                    <label for="config-default-sort">Default sort for Russian numbers:</label>
+                    <select id="config-default-sort">
+                        <option value="cyrillic_asc">Cyrillic (A-Z)</option>
+                        <option value="num_asc">Number (0-9)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="save-config-btn">Save Configuration</button>
+            <button id="reset-config-btn">Reset to Default</button>
+            <button id="close-config-btn">Close</button>
+        </div>
+    </div>
+
+    <div id="image-modal" class="modal" style="display: none;">
+        <span class="modal-close-btn" id="modal-close-btn">&times;</span>
+        <img class="modal-content" id="modal-img-src">
+    </div>
+
+    <script>
+// Global Variables
+let currentStep = 1;
+const MAX_STEPS = 5; 
+let appData = {
+    selectedRussianNumbers: [], 
+};
+let config = {
+    autoProgressRussianCode: false, 
+    defaultSortOrderStep3: 'num_asc' 
+};
+
+const RUSSIAN_NUMBERS = [
+    { val: 0, cyrillic: "Ноль", phonetic: "Nol'" },
+    { val: 1, cyrillic: "Один", phonetic: "Ah-deen" },
+    { val: 2, cyrillic: "Два", phonetic: "Dvah" },
+    { val: 3, cyrillic: "Три", phonetic: "Tree" },
+    { val: 4, cyrillic: "Четыре", phonetic: "Chye-tir-ye" },
+    { val: 5, cyrillic: "Пять", phonetic: "Pyat'" },
+    { val: 6, cyrillic: "Шесть", phonetic: "Shest'" },
+    { val: 7, cyrillic: "Семь", phonetic: "Syem'" },
+    { val: 8, cyrillic: "Восемь", phonetic: "Vo-syem'" },
+    { val: 9, cyrillic: "Девять", phonetic: "Dyev-yat'" }
+];
+let currentSortOrder = config.defaultSortOrderStep3; 
+let draggedItemIndex = null; 
+
+// DOM Elements
+let stepTitleElement, stepContentElement, prevStepBtn, nextStepBtn, restartBtn;
+let configBtn, configPage, closeConfigBtn; 
+let imageModal, modalImg, modalCloseBtn;
+let appContainer; 
+
+document.addEventListener('DOMContentLoaded', () => {
+    appContainer = document.getElementById('app-container');
+    stepTitleElement = document.getElementById('step-title');
+    stepContentElement = document.getElementById('step-content');
+    prevStepBtn = document.getElementById('prev-step-btn');
+    nextStepBtn = document.getElementById('next-step-btn');
+    restartBtn = document.getElementById('restart-btn');
+
+    configBtn = document.getElementById('config-btn');
+    configPage = document.getElementById('config-page');
+    closeConfigBtn = document.getElementById('close-config-btn'); 
+
+    imageModal = document.getElementById('image-modal');
+    modalImg = document.getElementById('modal-img-src');
+    modalCloseBtn = document.getElementById('modal-close-btn');
+
+    prevStepBtn.addEventListener('click', goPrevStep);
+    nextStepBtn.addEventListener('click', goNextStep);
+    restartBtn.addEventListener('click', restartApp);
+    configBtn.addEventListener('click', showConfigPage); 
+    
+    if (closeConfigBtn) { 
+        closeConfigBtn.addEventListener('click', hideConfigPage);
+        closeConfigBtn._hasEventListener = true; 
+    }
+
+    modalCloseBtn.addEventListener('click', closeModal);
+    imageModal.addEventListener('click', (e) => {
+        if (e.target === imageModal) { 
+            closeModal();
+        }
+    });
+
+    loadConfig(); 
+    renderCurrentStep();
+});
+
+function goNextStep() {
+    if (currentStep < MAX_STEPS) {
+        currentStep++;
+        renderCurrentStep();
+    }
+}
+
+function goPrevStep() {
+    if (currentStep > 1) {
+        currentStep--;
+        renderCurrentStep();
+    }
+}
+
+function restartApp() {
+    if (confirm("Are you sure you want to restart? All selections will be cleared.")) {
+        currentStep = 1;
+        appData = {
+            selectedRussianNumbers: [],
+        };
+        renderCurrentStep();
+    }
+}
+
+function updateNavigationButtonsState() {
+    prevStepBtn.disabled = (currentStep === 1);
+    nextStepBtn.disabled = (currentStep === MAX_STEPS);
+    
+    const step3NextBtn = document.getElementById('step3-page-next-btn');
+    if (step3NextBtn) { 
+        step3NextBtn.disabled = appData.selectedRussianNumbers.length < 3;
+    }
+}
+
+function renderCurrentStep() {
+    stepContentElement.innerHTML = ''; 
+    let title = "";
+
+    switch (currentStep) {
+        case 1: title = "Workflow Explanation"; renderStep1(); break;
+        case 2: title = "Find Activation Phone"; renderStep2(); break;
+        case 3: title = "Decipher Russian Code"; renderStep3(); break;
+        case 4: title = "Locate Numbered Phones"; renderStep4(); break;
+        case 5: title = "Locate Bunker 11"; renderStep5(); break;
+        default: title = "Unknown Step"; stepContentElement.innerHTML = "<p>Error: Unknown step.</p>"; break;
+    }
+    stepTitleElement.textContent = title;
+    updateNavigationButtonsState();
+    window.scrollTo(0, 0); 
+}
+
+// Modal Functions
+function openModal(imageSrc) {
+    if (imageModal && modalImg) {
+        modalImg.src = imageSrc;
+        imageModal.style.display = "block";
+    }
+}
+
+function closeModal() {
+    if (imageModal) {
+        imageModal.style.display = "none";
+        if (modalImg) {
+            modalImg.src = ""; 
+        }
+    }
+}
+
+// Config Page Functions
+function showConfigPage() {
+    if (configPage && appContainer) {
+        appContainer.style.display = 'none';
+        configPage.style.display = 'block';
+        loadConfig(); 
+
+        const saveBtn = document.getElementById('save-config-btn');
+        if (saveBtn && !saveBtn._hasEventListener) {
+            saveBtn.addEventListener('click', saveConfig);
+            saveBtn._hasEventListener = true;
+        }
+        
+        const resetBtn = document.getElementById('reset-config-btn');
+        if (resetBtn && !resetBtn._hasEventListener) {
+            resetBtn.addEventListener('click', resetConfig);
+            resetBtn._hasEventListener = true;
+        }
+        
+        if (closeConfigBtn && !closeConfigBtn._hasEventListener) {
+             closeConfigBtn.addEventListener('click', hideConfigPage);
+             closeConfigBtn._hasEventListener = true; 
+        }
+    }
+}
+
+function hideConfigPage() {
+    if (configPage && appContainer) {
+        configPage.style.display = 'none';
+        appContainer.style.display = 'flex'; 
+        if (currentStep === 3 && currentSortOrder !== config.defaultSortOrderStep3) {
+            currentSortOrder = config.defaultSortOrderStep3; 
+            renderCurrentStep(); 
+        }
+    }
+}
+
+function saveConfig() {
+    const autoProgressCheckbox = document.getElementById('config-auto-progress');
+    const defaultSortSelect = document.getElementById('config-default-sort');
+
+    if (autoProgressCheckbox) {
+        config.autoProgressRussianCode = autoProgressCheckbox.checked;
+    }
+    if (defaultSortSelect) {
+        config.defaultSortOrderStep3 = defaultSortSelect.value;
+    }
+    
+    try {
+        localStorage.setItem('bunker11Config', JSON.stringify(config));
+        alert("Configuration saved!");
+    } catch (e) {
+        console.error("Error saving config to localStorage:", e);
+        alert("Error saving configuration.");
+    }
+}
+
+function loadConfig() {
+    let newDefaultSort = 'num_asc'; 
+    try {
+        const storedConfig = localStorage.getItem('bunker11Config');
+        if (storedConfig) {
+            const parsedConfig = JSON.parse(storedConfig);
+            if (parsedConfig.defaultSortOrderStep3 === 'cyrillic_asc' || parsedConfig.defaultSortOrderStep3 === 'num_asc') {
+                newDefaultSort = parsedConfig.defaultSortOrderStep3;
+            }
+            config = { 
+                autoProgressRussianCode: parsedConfig.autoProgressRussianCode || false, 
+                defaultSortOrderStep3: newDefaultSort 
+            };
+        } else { 
+             config = { autoProgressRussianCode: false, defaultSortOrderStep3: newDefaultSort };
+        }
+    } catch (e) {
+        console.error("Error loading config from localStorage:", e);
+        config = { autoProgressRussianCode: false, defaultSortOrderStep3: newDefaultSort };
+    }
+
+    const autoProgressCheckbox = document.getElementById('config-auto-progress');
+    const defaultSortSelect = document.getElementById('config-default-sort');
+
+    if (autoProgressCheckbox) { 
+        autoProgressCheckbox.checked = config.autoProgressRussianCode;
+    }
+    if (defaultSortSelect) { 
+        defaultSortSelect.value = config.defaultSortOrderStep3;
+    }
+    
+    currentSortOrder = config.defaultSortOrderStep3; 
+}
+
+function resetConfig() {
+    config.autoProgressRussianCode = false;
+    config.defaultSortOrderStep3 = 'num_asc'; 
+    saveConfig(); 
+    loadConfig(); 
+    alert("Configuration reset to default."); 
+}
+
+// Step Rendering Functions
+function renderStep1() {
+    stepContentElement.innerHTML = `
+        <h3>Bunker 11 - Easter Egg Workflow</h3>
+        <p>This helper will guide you through the steps to unlock Bunker 11 in Call of Duty: Warzone.</p>
+        <ol>
+            <li><strong>Workflow explanation:</strong> (this step).</li>
+            <li><strong>Find an Activation Phone:</strong> Locate one of the special blue phones.</li>
+            <li><strong>Decipher the Russian Code:</strong> Identify the three numbers spoken in Russian.</li>
+            <li><strong>Locate and Activate Numbered Phones:</strong> Find and activate three corresponding red phones in the correct sequence.</li>
+            <li><strong>Locate Bunker 11 and find specialist:</strong> Head to Bunker 11 and claim your rewards.</li>
+        </ol>
+        <p>Use the 'Next' and 'Back' buttons to navigate. Good luck!</p>
+        <button class="action-button" id="step1-understood-btn">Got it, let's start!</button>
+    `;
+    const understoodBtn = document.getElementById('step1-understood-btn');
+    if (understoodBtn) {
+        understoodBtn.addEventListener('click', () => {
+            goNextStep();
+        });
+    }
+}
+
+function renderStep2() {
+    stepContentElement.innerHTML = `
+        <h3>Step 2: Find an Activation Phone</h3>
+        <p>Scattered across Verdansk are numerous 'activation phones' (also referred to as blue phones). You need to find one. Interacting with it will play a message in Russian.</p>
+        <img src="images/activation_phone_map.png" alt="Activation Phone Locations Map" class="zoomable-image" id="activation-phone-map">
+        <p><small>Click the map to zoom in.</small></p>
+        <p>After hearing the numbers, proceed to the next step to decipher them.</p>
+    `;
+    const phoneMapImg = document.getElementById('activation-phone-map');
+    if (phoneMapImg) {
+        phoneMapImg.addEventListener('click', () => {
+            openModal('images/activation_phone_map.png');
+        });
+    }
+}
+
+function renderStep3() {
+    let sortedNumbers = [...RUSSIAN_NUMBERS];
+    if (currentSortOrder === 'cyrillic_asc') {
+        sortedNumbers.sort((a, b) => a.cyrillic.localeCompare(b.cyrillic));
+    } else { 
+        sortedNumbers.sort((a, b) => a.val - a.val);
+    }
+
+    let numberButtonsHTML = sortedNumbers.map(num =>
+        `<button class="number-btn" data-value="${num.val}">
+            <span style="color:#424242;"><strong>${num.val}</strong> - </span><strong>${num.cyrillic}</strong><span style="color:#616161;"> - ${num.phonetic}</span>
+        </button>`
+    ).join('');
+
+    let selectedNumbersHTML = appData.selectedRussianNumbers.map((numVal, index) => {
+        const numData = RUSSIAN_NUMBERS.find(n => n.val === numVal) || { val: numVal, cyrillic: 'N/A', phonetic: 'N/A' };
+        let moveUpBtn = (index > 0) ? `<button class="move-btn move-up-btn" data-index="${index}">&#x25B2;</button>` : `<span class="move-btn-placeholder" style="display:inline-block; width:28px;"></span>`;
+        let moveDownBtn = (index < appData.selectedRussianNumbers.length - 1) ? `<button class="move-btn move-down-btn" data-index="${index}">&#x25BC;</button>` : `<span class="move-btn-placeholder" style="display:inline-block; width:28px;"></span>`;
+        return `
+            <li draggable="true" data-index="${index}">
+                <span style="color:#424242;"><strong>${numData.val}</strong> - </span><strong>${numData.cyrillic}</strong><span style="color:#616161;"> - ${numData.phonetic}</span>
+                <span class="selected-number-controls" style="margin-left: auto; display: flex; align-items: center;">
+                    ${moveUpBtn}
+                    ${moveDownBtn}
+                    <button class="remove-btn" data-index="${index}">&times;</button>
+                </span>
+            </li>`;
+    }).join('');
+
+    stepContentElement.innerHTML = `
+        <h3>Step 3: Decipher the Russian Code</h3>
+        <p>The activation phone will speak three numbers in Russian. Click the corresponding numbers below.</p> 
+        <div class="number-list-controls">
+            <label for="step3-sort-order-dropdown">Sort by:</label>
+            <select id="step3-sort-order-dropdown">
+                <option value="cyrillic_asc">Cyrillic (A-Z)</option>
+                <option value="num_asc">Number (0-9)</option>
+            </select>
+        </div>
+        <div class="number-grid">${numberButtonsHTML}</div>
+        <h4>Selected Code:</h4>
+        <ul id="selected-numbers-list" class="selected-numbers-list">
+            ${selectedNumbersHTML.length > 0 ? selectedNumbersHTML : '<p>No numbers selected yet.</p>'}
+        </ul>
+        <button class="action-button" id="step3-page-next-btn">Next &raquo;</button>
+    `;
+    
+    const sortDropdown = document.getElementById('step3-sort-order-dropdown');
+    if (sortDropdown) {
+        sortDropdown.value = currentSortOrder; 
+        sortDropdown.addEventListener('change', function() {
+            currentSortOrder = this.value;
+            renderCurrentStep(); 
+        });
+    }
+
+    document.querySelectorAll('.number-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            if (appData.selectedRussianNumbers.length < 3) {
+                const value = parseInt(e.target.closest('.number-btn').dataset.value);
+                appData.selectedRussianNumbers.push(value);
+                renderCurrentStep(); 
+                if (appData.selectedRussianNumbers.length === 3 && config.autoProgressRussianCode) {
+                    goNextStep();
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('#selected-numbers-list .remove-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const indexToRemove = parseInt(e.target.dataset.index);
+            appData.selectedRussianNumbers.splice(indexToRemove, 1);
+            renderCurrentStep(); 
+        });
+    });
+
+    document.querySelectorAll('#selected-numbers-list .move-up-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            if (index > 0) {
+                const temp = appData.selectedRussianNumbers[index];
+                appData.selectedRussianNumbers[index] = appData.selectedRussianNumbers[index-1];
+                appData.selectedRussianNumbers[index-1] = temp;
+                renderCurrentStep();
+            }
+        });
+    });
+
+    document.querySelectorAll('#selected-numbers-list .move-down-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            if (index < appData.selectedRussianNumbers.length - 1) {
+                const temp = appData.selectedRussianNumbers[index];
+                appData.selectedRussianNumbers[index] = appData.selectedRussianNumbers[index+1];
+                appData.selectedRussianNumbers[index+1] = temp;
+                renderCurrentStep();
+            }
+        });
+    });
+
+    const selectedList = document.getElementById('selected-numbers-list');
+    if (selectedList) {
+        selectedList.addEventListener('dragstart', (e) => {
+            if (e.target.tagName === 'LI') {
+                draggedItemIndex = parseInt(e.target.dataset.index);
+                e.dataTransfer.effectAllowed = 'move';
+                const textContentElement = e.target.querySelector('span:not(.selected-number-controls)');
+                e.dataTransfer.setData('text/plain', textContentElement ? textContentElement.textContent : ''); 
+                e.target.style.opacity = '0.5'; 
+            }
+        });
+        selectedList.addEventListener('dragend', (e) => {
+            if (e.target.tagName === 'LI') { e.target.style.opacity = ''; }
+            draggedItemIndex = null;
+        });
+        selectedList.addEventListener('dragover', (e) => {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+        });
+        selectedList.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const targetLi = e.target.closest('li');
+            if (targetLi && draggedItemIndex !== null) {
+                const targetIndex = parseInt(targetLi.dataset.index);
+                if (targetIndex !== draggedItemIndex) {
+                    const [draggedItemValue] = appData.selectedRussianNumbers.splice(draggedItemIndex, 1);
+                    appData.selectedRussianNumbers.splice(targetIndex, 0, draggedItemValue);
+                    renderCurrentStep(); 
+                }
+            }
+        });
+    }
+    
+    const step3NextBtn = document.getElementById('step3-page-next-btn');
+    if (step3NextBtn) {
+        step3NextBtn.addEventListener('click', goNextStep);
+        step3NextBtn.disabled = appData.selectedRussianNumbers.length < 3;
+    }
+}
+
+function renderStep4() {
+    if (!appData.selectedRussianNumbers || appData.selectedRussianNumbers.length !== 3) {
+        stepContentElement.innerHTML = `
+            <h3>Step 4: Locate and Activate Numbered Phones</h3>
+            <p style="color: orange;">Please complete Step 3 and select 3 Russian numbers first.</p>
+            <p>You need to have a sequence of three numbers (e.g., 1, 2, 3) from Step 3 to proceed.</p>
+            <button onclick="currentStep = 3; renderCurrentStep();">Go to Step 3</button>
+        `;
+        return;
+    }
+    let html = `
+        <h3>Step 4: Locate and Activate Numbered Phones</h3>
+        <p>Using the sequence of three numbers you deciphered (<strong>${appData.selectedRussianNumbers.join(', ')}</strong>), you must now find and activate the corresponding 'red' phones on the map in that exact order. The map below shows all potential red phone locations. Following that are detailed views for your specific sequence.</p>
+        <h4>Overall Red Phone Locations Map:</h4>
+        <img src="images/red_phone_map.png" alt="All Red Phone Locations Map" class="zoomable-image" id="red-phone-overall-map" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+        <p><small>Click the map to zoom in. (Placeholder map)</small></p>
+        <hr style="margin: 20px 0;">
+    `;
+    appData.selectedRussianNumbers.forEach((phoneNum, i) => {
+        html += `
+            <h4>Sequence ${i + 1}: Activate Phone Number ${phoneNum}</h4>
+            <div class="phone-detail-images">`;
+        for (let j = 1; j <= 3; j++) {
+            let detailImgId = `phone-${phoneNum}-detail-${j}`;
+            let imgSrc = `images/phone_${phoneNum}_detail_${j}.png`; 
+            html += `<img src="${imgSrc}" alt="Phone ${phoneNum} Detail ${j} (Placeholder)" class="zoomable-image" id="${detailImgId}">`;
+        }
+        html += `</div>
+                 <p><small>Click images to zoom.</small></p> 
+                 ${i < appData.selectedRussianNumbers.length - 1 ? '<hr style="margin: 15px 0;">' : ''}
+        `;
+    });
+    html += `<p style="margin-top: 20px;">Once all three phones are activated in the correct order, proceed to the final step.</p>
+             <button class="action-button" id="step4-page-next-btn">Next &raquo;</button>
+    `;
+    stepContentElement.innerHTML = html;
+
+    const overallMapImg = document.getElementById('red-phone-overall-map');
+    if (overallMapImg) {
+        overallMapImg.addEventListener('click', () => { openModal('images/red_phone_map.png'); });
+    }
+    appData.selectedRussianNumbers.forEach((phoneNum) => {
+        for (let j = 1; j <= 3; j++) {
+            const imgElement = document.getElementById(`phone-${phoneNum}-detail-${j}`);
+            const imgSrc = `images/phone_${phoneNum}_detail_${j}.png`; 
+            if (imgElement) {
+                imgElement.addEventListener('click', () => { openModal(imgSrc); });
+            }
+        }
+    });
+    
+    const step4NextBtn = document.getElementById('step4-page-next-btn');
+    if(step4NextBtn) {
+        step4NextBtn.addEventListener('click', goNextStep);
+        // This button is generally enabled, no specific disabled logic here for Step 4.
+    }
+}
+
+function renderStep5() {
+    stepContentElement.innerHTML = `
+        <h3>Step 5: Locate Bunker 11 & Claim Rewards</h3>
+        <p>After successfully activating the three numbered phones in the correct sequence, Bunker 11 will open. Head to its location shown on the map below.</p>
+        <h4>Bunker 11 External Location:</h4>
+        <img src="images/bunker_11_map.png" alt="Bunker 11 Location Map" class="zoomable-image" id="bunker-11-location-map" style="max-width: 100%; height: auto;">
+        <p><small>Click the map to zoom in. (Placeholder map)</small></p>
+        <hr style="margin: 20px 0;">
+        <h4>Inside Bunker 11:</h4>
+        <p>Inside Bunker 11, you can find valuable loot, including the 'Mud Dauber' MP7 blueprint. The map below shows a general layout and where important items or the 'specialist' might be found.</p>
+        <img src="images/bunker_11_specialist_map.png" alt="Bunker 11 Interior Map" class="zoomable-image" id="bunker-11-interior-map" style="max-width: 100%; height: auto;">
+        <p><small>Click the map to zoom in. (Placeholder map)</small></p>
+        <p style="font-weight: bold; color: #4CAF50; text-align: center; font-size: 1.2em; margin-top: 25px; margin-bottom: 15px;">Congratulations on completing the Bunker 11 Easter Egg!</p>
+    `;
+    const bunkerExtMap = document.getElementById('bunker-11-location-map');
+    if (bunkerExtMap) {
+        bunkerExtMap.addEventListener('click', () => { openModal('images/bunker_11_map.png'); });
+    }
+    const bunkerIntMap = document.getElementById('bunker-11-interior-map');
+    if (bunkerIntMap) {
+        bunkerIntMap.addEventListener('click', () => { openModal('images/bunker_11_specialist_map.png'); });
+    }
+    updateNavigationButtonsState(); 
+}
+    </script>
+</body>
+</html>
